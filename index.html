@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="ISO-8859-1">
+	<title>LedBut</title>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.11.1.min.js') }}"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+
+	<script type="text/javascript" charset="utf-8">
+		$(document).ready(function(){
+			var obj=document.getElementById("log");
+			function log(msg) {
+				$('#log').append('\n' +msg);
+				obj.scrollTop=obj.scrollHeight;
+			}
+	
+			namespace = '/test'; // change to an empty string to use the global namespace
+			var url = 'http://' + document.domain + ':' + location.port + namespace;
+			$('#log').append(url);
+			var socket = io.connect(url);
+			
+			$('#ledA').change(function() {
+				state = $(this).is(":checked");
+				log(state ? "LED ON" : "LED OFF");
+				socket.emit('ledACtrl', {led: state});
+			});
+	
+			$('#ledR').change(function() {
+				state = $(this).is(":checked");
+				log(state ? "LED ON" : "LED OFF");
+				socket.emit('ledRCtrl', {led: state});
+			});
+			
+			socket.on('connect', function() {
+				socket.emit('my event', {data: 'I\'m connected!'});
+			});
+			
+			socket.on('disconnect', function() {
+				socket.emit('my event', {data: 'I\'m disconnected!'});
+			});
+			
+			socket.on('butAState', function(msg) {
+				but = msg.but ? "Button ON" : "Button OFF";
+				log(but);
+				$('#buttonA').text(but);
+			});
+
+			socket.on('butRState', function(msg) {
+				but = msg.but ? "Button ON" : "Button OFF";
+				log(but);
+				$('#buttonR').text(but);
+			});
+			
+		})
+	</script>
+</head>
+<body>
+	<table style="width:100%">
+	<tr>
+		<td>
+			<h1>Arduino</h1>
+			<input type="checkbox" id="ledA">LED<br>
+			<p id="buttonA">Button Off</p>
+		</td>
+		<td>
+			<h1>RasPi</h1>
+			<input type="checkbox" id="ledR">LED<br>
+			<p id="buttonR">Button Off</p>
+		</td>
+		<td>
+			<textarea id="log" rows="15" cols="50"></textarea>
+		</td>
+	</tr>
+	</table>
+</body>
+</html>
